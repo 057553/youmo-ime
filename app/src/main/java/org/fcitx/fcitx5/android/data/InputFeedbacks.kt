@@ -7,6 +7,9 @@ package org.fcitx.fcitx5.android.data
 import android.media.AudioManager
 import android.os.Trace
 import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibrationAttributes
+import android.os.Build
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -59,40 +62,64 @@ object InputFeedbacks {
             InputFeedbackMode.Disabled -> return
             InputFeedbackMode.FollowingSystem -> if (!systemHapticFeedback) return
         }
-        val duration: Long
-        val amplitude: Int
-        val hfc: Int
-        if (longPress) {
-            duration = buttonLongPressVibrationMilliseconds.toLong()
-            amplitude = buttonLongPressVibrationAmplitude
-            hfc = HapticFeedbackConstants.LONG_PRESS
-        } else {
-            duration = buttonPressVibrationMilliseconds.toLong()
-            amplitude = buttonPressVibrationAmplitude
-            hfc = HapticFeedbackConstants.KEYBOARD_TAP
-        }
+        // 自定义时长、振幅只在「启用」模式下使用；跟随系统不读残留值（CyIME 语义）。
+        val enabled = hapticOnKeyPress == InputFeedbackMode.Enabled
+        val duration: Long = if (enabled) {
+            (if (longPress) buttonLongPressVibrationMilliseconds else buttonPressVibrationMilliseconds).toLong()
+        } else 0L
+        val amplitude: Int = if (enabled) {
+            if (longPress) buttonLongPressVibrationAmplitude else buttonPressVibrationAmplitude
+        } else 0
+        val hfc: Int = if (longPress) HapticFeedbackConstants.LONG_PRESS
+        else HapticFeedbackConstants.KEYBOARD_TAP
 
-        // there is `VibrationEffect.DEFAULT_AMPLITUDE` but no default duration;
-        // also `VibrationEffect.createOneShot()` only accepts positive duration.
-        // so changing amplitude without changing duration makes no sense
+        // 无自定义时长：先走系统按键触感（KEYBOARD_TAP），微信输入法、小米自带输入法同一条路，
+        // HyperOS 会映射到厂商调校的短促 click；系统没接（返回 false）再自己兜底。
+        if (duration == 0L && amplitude == 0) {
+            var flags = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
+            if (enabled) {
+                @Suppress("DEPRECATION")
+                flags = flags or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+            }
+            if (view.performHapticFeedback(hfc, flags)) return
+            // HAL 预定义效果（厂商调校，myron 支持 CLICK/TICK/HEAVY_CLICK）。areEffectsSupported 是 API 30 的。
+            val effect = if (longPress) VibrationEffect.EFFECT_HEAVY_CLICK else VibrationEffect.EFFECT_CLICK
+            if (Build.VERSION.SDK_INT >= 30 &&
+                vibrator.areEffectsSupported(effect) == Vibrator.VIBRATION_EFFECT_SUPPORT_YES
+            ) {
+                vibrateTouch(VibrationEffect.createPredefined(effect))
+                return
+            }
+            // 预定义也不支持：按马达类型给短脉冲。振幅可控的多为线性马达，长脉冲会共振成「嗡」，
+            // 只给十几毫秒打出来是「哒」；普通转子马达短于 30ms 转不起来。
+            val ms = if (hasAmplitudeControl) (if (longPress) 30L else 15L)
+            else (if (longPress) 70L else 45L)
+            vibrateTouch(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
+            return
+        }
+        // 自定义时长：原逻辑不变。
         if (duration != 0L) {
-            // on Android 13, if system haptic feedback was disabled, `vibrator.vibrate()` won't work
-            // but `view.performHapticFeedback()` with `FLAG_IGNORE_GLOBAL_SETTING` still works
             if (hasAmplitudeControl && amplitude != 0) {
                 vibrator.vibrate(VibrationEffect.createOneShot(duration, amplitude))
             } else {
-                val ve = VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
-                vibrator.vibrate(ve)
+                vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
             }
         } else {
             var flags = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
-            if (hapticOnKeyPress == InputFeedbackMode.Enabled) {
-                // it says "Starting TIRAMISU only privileged apps can ignore user settings for touch feedback"
-                // but we still seem to be able to use `FLAG_IGNORE_GLOBAL_SETTING`
+            if (enabled) {
                 @Suppress("DEPRECATION")
                 flags = flags or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
             }
             view.performHapticFeedback(hfc, flags)
+        }
+    }
+
+    /** 触摸反馈用途的振动：随系统「触摸互动」强度，而不是按媒体振动归类（CyIME vibrateTouch）。 */
+    private fun vibrateTouch(effect: VibrationEffect) {
+        if (Build.VERSION.SDK_INT >= 31) {
+            vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH))
+        } else {
+            vibrator.vibrate(effect)
         }
     }
 
