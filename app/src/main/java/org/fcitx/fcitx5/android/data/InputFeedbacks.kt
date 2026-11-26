@@ -82,10 +82,11 @@ object InputFeedbacks {
                 flags = flags or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
             }
             if (view.performHapticFeedback(hfc, flags)) return
-            // HAL 预定义效果（厂商调校，myron 支持 CLICK/TICK/HEAVY_CLICK）。areEffectsSupported 是 API 30 的。
+            // HAL 预定义效果（厂商调校，myron 支持 CLICK/TICK/HEAVY_CLICK）。
+            // areAllEffectsSupported 与其支持常量是 API 31 的（createPredefined 本身 30 就有）。
             val effect = if (longPress) VibrationEffect.EFFECT_HEAVY_CLICK else VibrationEffect.EFFECT_CLICK
-            if (Build.VERSION.SDK_INT >= 30 &&
-                vibrator.areEffectsSupported(effect) == Vibrator.VIBRATION_EFFECT_SUPPORT_YES
+            if (Build.VERSION.SDK_INT >= 31 &&
+                vibrator.areAllEffectsSupported(effect) == Vibrator.VIBRATION_EFFECT_SUPPORT_YES
             ) {
                 vibrateTouch(VibrationEffect.createPredefined(effect))
                 return

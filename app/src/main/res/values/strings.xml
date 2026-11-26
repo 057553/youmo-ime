@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Youmo IME</string>
-    <string name="app_name_debug">Youmo IME (Debug)</string>
-    <string name="app_name_bench">Youmo IME (Bench)</string>
+    <string name="app_name_release">幽默输入法 η</string>
+    <string name="app_name_debug">幽默输入法 η (Debug)</string>
+    <string name="app_name_bench">幽默输入法 η (Bench)</string>
     <string name="input_methods">Input Methods</string>
     <string name="advanced">Advanced</string>
     <string name="_not_available_">(Not Available)</string>

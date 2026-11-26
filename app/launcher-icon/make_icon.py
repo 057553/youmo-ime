@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw
 
 RES = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'main', 'res')
 FUR, SKIN, INK, GLINT = '#8B5A2B', '#F8DDB5', '#3B2314', '#CCFFFFFF'
-BACKGROUNDS = {'': ('#FFB74D', '#F57C00'), '_debug': ('#90A4AE', '#455A64')}
+BACKGROUNDS = {'': ('#64B5F6', '#1565C0'), '_debug': ('#90A4AE', '#455A64')}
 TILT = -6  # degrees, about (54, 56)
 
 
