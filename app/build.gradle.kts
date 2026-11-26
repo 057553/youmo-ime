@@ -97,9 +97,11 @@ android {
     namespace = "org.fcitx.fcitx5.android"
 
     defaultConfig {
-        applicationId = "io.github.sraw.youmo"
-        // the id without the build type's suffix (.debug): UserDataOrigin's root, for importing backups
-        buildConfigField("String", "APPLICATION_ID_ROOT", "\"$applicationId\"")
+        applicationId = "io.github.sraw.youmo.eta"
+        // the official app's id: backups it exported name this package, and import renames the
+        // preferences over (UserDataOrigin's root); APPLICATION_ID itself is this fork's own
+        val officialApplicationId = "io.github.sraw.youmo"
+        buildConfigField("String", "APPLICATION_ID_ROOT", "\"$officialApplicationId\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["profileableShell"] = buildProfileable.toString()
     }

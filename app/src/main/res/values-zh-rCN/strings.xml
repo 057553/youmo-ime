@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">幽默输入法</string>
-    <string name="app_name_debug">幽默输入法 (调试)</string>
-    <string name="app_name_bench">幽默输入法 (测速)</string>
+    <string name="app_name_release">幽默输入法 η</string>
+    <string name="app_name_debug">幽默输入法 η (调试)</string>
+    <string name="app_name_bench">幽默输入法 η (测速)</string>
     <string name="input_methods">输入法</string>
     <string name="advanced">高级</string>
     <string name="_not_available_">（不可用）</string>

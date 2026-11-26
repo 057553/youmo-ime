@@ -17,6 +17,13 @@ sealed interface UserDataOrigin {
     companion object {
         fun of(exporter: String, applicationId: String, root: String): UserDataOrigin? = when {
             exporter == applicationId -> Own
+            // a backup the official app exported: this fork is a sibling of it, not built under
+            // its root, so the root-prefix branch below cannot see it; the preferences are renamed
+            // the same way, so every setting (and the engine data beside them) carries over.
+            // Only when this app is not the official app itself (root == applicationId there, and
+            // its release backup must stay refused by its debug build).
+            exporter == root && root != applicationId ->
+                Legacy(preferencesFile(exporter), preferencesFile(applicationId))
             applicationId.startsWith(root) &&
                 exporter == LEGACY_APPLICATION_ID_ROOT + applicationId.removePrefix(root) ->
                 Legacy(preferencesFile(exporter), preferencesFile(applicationId))
