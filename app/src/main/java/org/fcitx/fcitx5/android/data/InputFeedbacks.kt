@@ -117,7 +117,8 @@ object InputFeedbacks {
 
     /** 触摸反馈用途的振动：随系统「触摸互动」强度，而不是按媒体振动归类（CyIME vibrateTouch）。 */
     private fun vibrateTouch(effect: VibrationEffect) {
-        if (Build.VERSION.SDK_INT >= 31) {
+        // vibrate(effect, attributes) 与 createForUsage 均为 API 33 新增，lintVitalRelease 按 minSdk 31 检查
+        if (Build.VERSION.SDK_INT >= 33) {
             vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH))
         } else {
             vibrator.vibrate(effect)
